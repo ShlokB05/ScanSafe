@@ -8,7 +8,7 @@ from .models import UserProfile, item, ScanResult
 from rest_framework.parsers import MultiPartParser, FormParser
 from pathlib import Path
 from ScanSafe.DB.ocrChild import ProcessFile
-from ScanSafe.DB.barcode import GetGtin
+#from ScanSafe.DB.barcode import GetGtin
 from ScanSafe.DB.checker import Checker  
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
