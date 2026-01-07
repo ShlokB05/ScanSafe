@@ -1,0 +1,76 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+
+*.
+
+node_modules
+dist
+dist-ssr
+*.local
+
+
+# OCR junk / experiments
+ScanSafe/DB/PaddleOCR*/
+ScanSafe/DB/imgs/
+ScanSafe/DB/__pycache__/
+ScanSafe/DB/*.png
+ScanSafe/DB/commoningredients.txt
+ScanSafe/DB/inversed.py
+ScanSafe/DB/test2.py
+
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ---- Python / Django ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+.env
+.env.*
+.venv/
+venv/
+ENV/
+dist/
+build/
+
+# Django static/media (adjust if you use these folders)
+staticfiles/
+media/
+
+# ---- Node / Vite ----
+
+FrontEnd/node_modules/
+FrontEnd/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- OS ----
+.DS_Store
+
+# ---- IDE ----
+.vscode/
+.idea/
+Trash
+
+

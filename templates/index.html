@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ScanSafe — Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+    body  { margin: 0; background:#0b1020; color:#eef2ff; }
+    .wrap { max-width: 1000px; margin: 32px auto; padding: 0 16px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 32px 0 8px; font-size: 20px; }
+    .card { background:#101833; border:1px solid #212a4d; border-radius:14px; padding:16px; margin:16px 0; }
+    .row { display:flex; gap:8px; flex-wrap: wrap; }
+    input, button, select, .pill {
+      background:#0e142a; color:#e6ebff; border:1px solid #2a3668; border-radius:10px; padding:10px 12px; 
+      outline:none; font-size:14px;
+    }
+    input[type=file]{ padding:6px; }
+    button { cursor:pointer; }
+    button.primary { background:#3651ff; border-color:#3651ff; }
+    button.ghost   { background: transparent; }
+    .pill { display:inline-block; padding:6px 10px; margin:4px 6px 0 0; border-radius:999px; }
+    .ok { color:#a7f3d0; }
+    .bad { color:#fecaca; }
+    code { background:#0f172a; padding:2px 6px; border-radius:6px; }
+    .grid { display:grid; grid-template-columns: 1fr; gap:16px; }
+    @media (min-width: 860px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .muted { color:#9aa4c7; font-size:13px; }
+    .hr { height:1px; background:#1f2748; margin:16px 0; }
+    .hidden{ display:none; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ScanSafe</h1>
+  <p class="muted">Mini demo: register / log in, set allergens, upload a label to test the backend.</p>
+
+  <!-- AUTH -->
+  <div class="grid">
+    <div class="card">
+      <h2>Register</h2>
+      <div class="row">
+        <input id="r-username" placeholder="username" autocomplete="username" />
+        <input id="r-email" placeholder="email" type="email" autocomplete="email" />
+        <input id="r-password" placeholder="password" type="password" autocomplete="new-password" />
+        <button class="primary" onclick="register()">Create account</button>
+      </div>
+      <div id="register-msg" class="muted"></div>
+    </div>
+
+    <div class="card">
+      <h2>Login</h2>
+      <div class="row">
+        <input id="l-username" placeholder="username" autocomplete="username" />
+        <input id="l-password" placeholder="password" type="password" autocomplete="current-password" />
+        <button class="primary" onclick="login()">Log in</button>
+        <button class="ghost" onclick="logout()">Log out</button>
+      </div>
+      <div id="login-msg" class="muted"></div>
+      <div id="whoami" class="muted"></div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="card">
+    <h2>Allergens</h2>
+    <div class="muted">Pick a few common allergens (you can also add custom tags).</div>
+    <div class="row" style="margin-top:8px">
+      <label><input type="checkbox" class="allergen" value="milk"> milk</label>
+      <label><input type="checkbox" class="allergen" value="egg"> egg</label>
+      <label><input type="checkbox" class="allergen" value="peanut"> peanut</label>
+      <label><input type="checkbox" class="allergen" value="soy"> soy</label>
+      <label><input type="checkbox" class="allergen" value="wheat"> wheat</label>
+      <label><input type="checkbox" class="allergen" value="tree nut"> tree nut</label>
+      <label><input type="checkbox" class="allergen" value="fish"> fish</label>
+      <label><input type="checkbox" class="allergen" value="shellfish"> shellfish</label>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <input id="custom-tag" placeholder="add custom (e.g., sesame)" />
+      <button onclick="addCustom()">Add</button>
+      <button class="primary" onclick="saveProfile()">Save profile</button>
+      <button class="ghost" onclick="loadProfile()">Reload</button>
+    </div>
+    <div id="custom-tags" style="margin-top:6px"></div>
+    <div id="profile-msg" class="muted"></div>
+  </div>
+
+  <!-- SCAN -->
+  <div class="card">
+    <h2>Test scan</h2>
+    <div class="row">
+      <input id="scan-file" type="file" accept="image/*" />
+      <button class="primary" onclick="scan()">Upload & scan</button>
+    </div>
+    <div class="hr"></div>
+    <pre id="scan-out" class="muted"></pre>
+  </div>
+</div>
+
+<script>
+const API = "/api";                     // served from same origin
+const csrftoken = () => getCookie("csrftoken");
+
+// --- cookie helper (Django CSRF) ---
+function getCookie(name) {
+  const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return m ? m.pop() : "";
+}
+
+// --- UI helpers ---
+function note(id, msg, ok=true){ const el = document.getElementById(id); el.textContent = msg || ""; el.className = ok ? "muted ok" : "muted bad"; }
+function pills(el, items){
+  el.innerHTML = "";
+  (items || []).forEach(v => {
+    const span = document.createElement("span");
+    span.className = "pill";
+    span.textContent = v;
+    el.appendChild(span);
+  });
+}
+
+// --- AUTH ---
+async function register(){
+  note("register-msg", "…");
+  const body = {
+    username: document.getElementById("r-username").value.trim(),
+    email:    document.getElementById("r-email").value.trim(),
+    password: document.getElementById("r-password").value
+  };
+  const res = await fetch(`${API}/auth/register`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "X-CSRFToken": csrftoken() },
+    credentials:"include",
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(()=>({}));
+  note("register-msg", res.ok ? "Account created. Now log in." : JSON.stringify(data), res.ok);
+}
+
+async function login(){
+  note("login-msg","…");
+  const body = {
+    username: document.getElementById("l-username").value.trim(),
+    password: document.getElementById("l-password").value
+  };
+  const res = await fetch(`${API}/auth/login`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "X-CSRFToken": csrftoken() },
+    credentials:"include",
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(()=>({}));
+  note("login-msg", res.ok ? "Logged in." : (data.detail || data.error || "Login failed"), res.ok);
+  if (res.ok) loadProfile();
+}
+
+async function logout(){
+  await fetch(`${API}/auth/logout`, {
+    method:"POST",
+    headers:{ "X-CSRFToken": csrftoken() },
+    credentials:"include"
+  });
+  note("login-msg","Logged out.");
+  document.getElementById("whoami").textContent = "";
+  // clear checkboxes/pills
+  document.querySelectorAll(".allergen").forEach(cb => cb.checked = false);
+  pills(document.getElementById("custom-tags"), []);
+}
+
+// --- PROFILE ---
+function getAllergenValues(){
+  return Array.from(document.querySelectorAll(".allergen"))
+    .filter(cb => cb.checked).map(cb => cb.value);
+}
+function setAllergenValues(values){
+  const set = new Set(values || []);
+  document.querySelectorAll(".allergen").forEach(cb => cb.checked = set.has(cb.value));
+}
+let custom = [];   // in-memory list
+function addCustom(){
+  const v = document.getElementById("custom-tag").value.trim();
+  if (!v) return;
+  if (!custom.includes(v)) custom.push(v);
+  document.getElementById("custom-tag").value = "";
+  pills(document.getElementById("custom-tags"), custom);
+}
+
+async function loadProfile(){
+  const res = await fetch(`${API}/profile`, { credentials:"include" });
+  if (!res.ok){
+    note("profile-msg", "Not logged in.", false);
+    document.getElementById("whoami").textContent = "";
+    return;
+  }
+  const data = await res.json();
+  setAllergenValues(data.allergens || []);
+  custom = data.custom || [];
+  pills(document.getElementById("custom-tags"), custom);
+  document.getElementById("whoami").textContent = `Logged in as ${data.username || data.user || "user"}`;
+  note("profile-msg","Loaded.");
+}
+
+async function saveProfile(){
+  const body = { allergens: getAllergenValues(), custom };
+  const res = await fetch(`${API}/profile`, {
+    method:"PUT",
+    headers:{ "Content-Type":"application/json", "X-CSRFToken": csrftoken() },
+    credentials:"include",
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(()=>({}));
+  note("profile-msg", res.ok ? "Saved." : JSON.stringify(data), res.ok);
+}
+
+// --- SCAN (optional demo) ---
+async function scan(){
+  const f = document.getElementById("scan-file").files[0];
+  if (!f){ note("scan-out","Pick an image first.", false); return; }
+  const fd = new FormData(); fd.append("image", f);
+  const res = await fetch(`${API}/scan`, {
+    method:"POST",
+    headers:{ "X-CSRFToken": csrftoken() },
+    credentials:"include",
+    body: fd
+  });
+  const data = await res.json().catch(()=>({ detail:"Bad JSON" }));
+  document.getElementById("scan-out").textContent = JSON.stringify(data, null, 2);
+}
+
+// try to preload profile (and get CSRF cookie set by Django)
+loadProfile();
+</script>
+</body>
+</html>
