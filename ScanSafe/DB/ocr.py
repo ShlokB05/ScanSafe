@@ -5,6 +5,17 @@ from PIL import Image, ImageOps
 import numpy as np
 from pathlib import Path
 
+import threading
+Reader = None
+Reader_lock = threading.Lock()
+
+def getReader():
+    global Reader
+    if Reader is None:
+        with Reader_lock:
+            if Reader is None:
+                Reader = easyocr.Reader(['en'], gpu=False)
+    return Reader
 
 #for testing
 Threshold=50
@@ -30,7 +41,8 @@ def Main(ImgPath):
     step1Img = PreprocessImage(image)
     if IsTooBlurry(step1Img, threshold=Threshold): return []  
 
-    reader = easyocr.Reader(['en'], gpu=False)
+
+    reader = getReader()
     result = reader.readtext(step1Img, detail=0, paragraph=True, mag_ratio=2)
     
 
