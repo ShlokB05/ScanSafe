@@ -31,6 +31,7 @@ pyparsing==3.2.5
 python-bidi==0.6.7
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
+zbar 0.23.93.2
 PyYAML==6.0.3
 pyzbar==0.1.9
 RapidFuzz==3.14.3
