@@ -1,10 +1,10 @@
-FROM python:3.12-slim     
+FROM python:3.12-slim
 
-WORKDIR /    
+WORKDIR /app
 
 COPY api/requirements.txt .
-RUN pip install -r api/requirements.txt   # build step
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .                 
+COPY . .
 
 CMD gunicorn ScanSafe.wsgi:application --bind 0.0.0.0:$PORT
