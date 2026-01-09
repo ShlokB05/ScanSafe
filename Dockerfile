@@ -1,18 +1,10 @@
-# Use a standard Debian-based image (NOT Alpine)
-FROM python:3.12-slim
+FROM python:3.12-slim     
 
-# Install system dependencies required for Postgres
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set work directory
-WORKDIR /
+WORKDIR /    
 
 COPY api/requirements.txt .
-RUN pip install --no-cache-dir -r api/requirements.txt
+RUN pip install -r api/requirements.txt   # build step
 
-COPY . .
+COPY . .                 
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "ScanSafe.wsgi:application"]
+CMD gunicorn ScanSafe.wsgi:application --bind 0.0.0.0:$PORT
