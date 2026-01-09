@@ -1,26 +1,90 @@
 import os
-from dotenv import load_dotenv
 import dj_database_url
 from pathlib import Path
+from dotenv import load_dotenv
 
 load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ROOT_URLCONF = os.environ.get('ROOT_URLCONF')
+SECRET_KEY = os.getenv("SECRET_KEY", "change_me_in_production_please")
+
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 def csv_env(name: str) -> list[str]:
     return [x.strip() for x in os.getenv(name, "").split(",") if x.strip()]
 
-SECRET_KEY = os.getenv("SECRET_KEY", "")
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
-
 ALLOWED_HOSTS = csv_env("ALLOWED_HOSTS")
-CORS_ALLOWED_ORIGINS = csv_env("CORS_ALLOWED_ORIGINS")
-CSRF_TRUSTED_ORIGINS = csv_env("CSRF_TRUSTED_ORIGINS")
+if not ALLOWED_HOSTS and DEBUG:
+    ALLOWED_HOSTS = ["*"]
 
+CSRF_TRUSTED_ORIGINS = csv_env("CSRF_TRUSTED_ORIGINS")
+CORS_ALLOWED_ORIGINS = csv_env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
 
-# Cloud Run sits behind a proxy; Django must trust X-Forwarded-Proto
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
+    'api',
+    'ScanSafe',
+]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'ScanSafe.urls'
+WSGI_APPLICATION = 'ScanSafe.wsgi.application'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+DATABASES = {
+    "default": dj_database_url.parse(os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3"), conn_max_age=600)
+}
+
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
+}
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 if not DEBUG:
@@ -29,3 +93,5 @@ if not DEBUG:
     SESSION_COOKIE_SAMESITE = "None"
     CSRF_COOKIE_SAMESITE = "None"
     SECURE_SSL_REDIRECT = True
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
