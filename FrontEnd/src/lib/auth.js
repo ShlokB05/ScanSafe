@@ -1,4 +1,6 @@
-const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API = `${API_ORIGIN}/api`;
+
 function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
@@ -7,7 +9,6 @@ function getCookie(name) {
 }
 
 async function ensureCsrf() {
-  // This endpoint should exist in Django: /api/auth/csrf/
   await fetch(`${API}/auth/csrf/`, { credentials: "include" });
   return getCookie("csrftoken") || "";
 }
@@ -18,19 +19,14 @@ export async function getUser() {
   return data.user ?? null;
 }
 
-
 export async function login({ email, password }) {
   const csrf = await ensureCsrf();
   const res = await fetch(`${API}/auth/login/`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrf,
-    },
+    headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
     credentials: "include",
     body: JSON.stringify({ email, password }),
   });
-
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error || "Could not login");
   return data.user ?? null;
@@ -40,14 +36,10 @@ export async function register({ name, email, password }) {
   const csrf = await ensureCsrf();
   const res = await fetch(`${API}/auth/register/`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrf,
-    },
+    headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
     credentials: "include",
     body: JSON.stringify({ name, email, password }),
   });
-
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error || "Could not register");
   return data.user ?? null;
@@ -57,14 +49,10 @@ export async function updateUser(patch) {
   const csrf = await ensureCsrf();
   const res = await fetch(`${API}/profile/`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrf,
-    },
+    headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
     credentials: "include",
     body: JSON.stringify(patch),
   });
-
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error || "Could not update user");
   return data ?? null;
