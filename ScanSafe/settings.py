@@ -23,6 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ALLOWED_HOSTS = [name.strip() for name in os.getenv("ALLOWED_HOSTS", "").split(",") if name.strip()]
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()]
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",             
+    "https://scan-safe-v1.vercel.app",   
+]
+# ----------------------
 
 print("ENV CSRF_TRUSTED_ORIGINS raw =", os.getenv("CSRF_TRUSTED_ORIGINS"))
 print("CSRF_TRUSTED_ORIGINS parsed =", CSRF_TRUSTED_ORIGINS)
