@@ -1,0 +1,25 @@
+steps:
+  # 1. Build the container image
+  # Uses $PROJECT_ID automatically (scansafev1)
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/scansafe', '.']
+
+  # 2. Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/scansafe']
+
+  # 3. Deploy to the EXISTING Cloud Run service
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'scansafe'  # Matches your actual service name
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/scansafe'
+      - '--region'
+      - 'europe-west1' # Matches your actual region
+
+# This forces the 32-core machine for the build process
+options:
+  machineType: 'E2_HIGHCPU_32'
