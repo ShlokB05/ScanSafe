@@ -1,24 +1,25 @@
 steps:
-  # 1. Build the container image
-  # Uses $PROJECT_ID automatically (scansafev1)
+  # 1. Build with --no-cache to force updates
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '--no-cache', '-t', 'gcr.io/$PROJECT_ID/scansafe', '.']
-  # 2. Push the image to Container Registry
+
+  # 2. Push the image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/scansafe']
 
-  # 3. Deploy to the EXISTING Cloud Run service
+  # 3. Deploy
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
       - 'run'
       - 'deploy'
-      - 'scansafe'  # Matches your actual service name
+      - 'scansafe'
       - '--image'
       - 'gcr.io/$PROJECT_ID/scansafe'
       - '--region'
-      - 'europe-west1' # Matches your actual region
+      - 'europe-west1'
 
-# This forces the 32-core machine for the build process
+# OPTION (C) FROM THE ERROR MESSAGE IS ADDED HERE:
 options:
   machineType: 'E2_HIGHCPU_32'
+  logging: CLOUD_LOGGING_ONLY
