@@ -8,10 +8,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set work directory
-WORKDIR /app
+WORKDIR /
 
 COPY app/requirements.txt .
-RUN pip install --no-cache-dir -r app/requirements.txt
+RUN pip install --no-cache-dir -r api/requirements.txt
 
 COPY . .
 
