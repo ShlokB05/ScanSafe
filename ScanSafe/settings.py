@@ -6,6 +6,8 @@ from pathlib import Path
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+ROOT_URLCONF = os.environ.get('ROOT_URLCONF')
+
 def csv_env(name: str) -> list[str]:
     return [x.strip() for x in os.getenv(name, "").split(",") if x.strip()]
 
