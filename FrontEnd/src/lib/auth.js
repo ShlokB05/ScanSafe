@@ -1,5 +1,4 @@
-const API = "/api";
-
+const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
