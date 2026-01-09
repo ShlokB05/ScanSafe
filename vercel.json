@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://scansafe-312586010242.europe-west1.run.app/api/:path*"
+    }
+  ]
+}

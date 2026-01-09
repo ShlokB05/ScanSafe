@@ -1,17 +1,24 @@
+// src/pages/AuthLanding.jsx
 import React, { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { getUser } from "../lib/auth.js";
 import logo from "../assets/logo.png";
 
 export default function AuthLanding() {
-  const [status, setStatus] = useState("loading"); 
+  const [status, setStatus] = useState("loading");
 
   useEffect(() => {
     let alive = true;
     getUser()
-      .then((u) => { if (alive) setStatus(u ? "authed" : "guest"); })
-      .catch(() => { if (alive) setStatus("guest"); });
-    return () => { alive = false; };
+      .then((u) => {
+        if (alive) setStatus(u ? "authed" : "guest");
+      })
+      .catch(() => {
+        if (alive) setStatus("guest");
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   if (status === "loading") return <div>Checking session…</div>;
@@ -31,8 +38,12 @@ export default function AuthLanding() {
         </p>
 
         <div className="stack">
-          <Link className="btn btn-primary auth-submit" to="/register">Register</Link>
-          <Link className="btn btn-outline auth-submit" to="/login">Login</Link>
+          <Link className="btn btn-primary auth-submit" to="/register">
+            Register
+          </Link>
+          <Link className="btn btn-outline auth-submit" to="/login">
+            Login
+          </Link>
         </div>
       </div>
     </div>

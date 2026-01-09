@@ -1,30 +1,22 @@
+// src/pages/Allergens.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import AppHeader from "../components/AppHeader.jsx";
-import { API } from "../lib/api.js"; 
-
-
-function getCookie(name) {
-  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-async function ensureCsrf() {
-  await fetch(`${API}/auth/csrf/`, { credentials: "include" });
-}
-
+import { apiUrl, ensureCsrf, getCookie } from "../lib/api.js";
 
 async function saveAllergensRemote(list) {
   await ensureCsrf();
   const csrftoken = getCookie("csrftoken");
-  const res = await fetch(`${API}/profile/`, {
+
+  const res = await fetch(apiUrl("/profile/"), {
     method: "PATCH",
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": csrftoken,
+      "X-CSRFToken": csrftoken || ""
     },
-    body: JSON.stringify({ allergens: list }),
+    body: JSON.stringify({ allergens: list })
   });
+
   if (!res.ok) throw new Error("Failed to save allergens");
   return res.json();
 }
@@ -39,7 +31,7 @@ const PRESETS = [
   "Wheat/Gluten",
   "Fish",
   "Shellfish",
-  "Sesame",
+  "Sesame"
 ];
 
 function loadAllergens() {
@@ -64,11 +56,12 @@ export default function Allergens() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/profile/", { credentials: "include" });
+        const res = await fetch(apiUrl("/profile/"), { credentials: "include" });
         if (!res.ok) return;
         const data = await res.json();
-        setItems(data.allergens || []);
-        saveAllergens(data.allergens || []);
+        const next = data.allergens || [];
+        setItems(next);
+        saveAllergens(next);
       } catch {}
     })();
   }, []);

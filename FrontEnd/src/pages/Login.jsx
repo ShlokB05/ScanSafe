@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
@@ -6,19 +7,19 @@ import { login } from "../lib/auth.js";
 export default function Login() {
   const nav = useNavigate();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); 
+  const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
-async function onSubmit(e) {
-  e.preventDefault();
-  setErr("");
-  try {
-    await login({ email, password });
-    nav("/scan", { replace: true });
-  } catch (e2) {
-    setErr(e2?.message || "Could not login");
-  }
-}
 
+  async function onSubmit(e) {
+    e.preventDefault();
+    setErr("");
+    try {
+      await login({ email, password });
+      nav("/scan", { replace: true });
+    } catch (e2) {
+      setErr(e2?.message || "Could not login");
+    }
+  }
 
   return (
     <div className="auth">
@@ -54,6 +55,7 @@ async function onSubmit(e) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="(prototype)"
+              required
             />
           </label>
 
@@ -63,7 +65,9 @@ async function onSubmit(e) {
         </form>
 
         <div className="auth-footer">
-          <Link to="/register" className="auth-link">Need an account? Register</Link>
+          <Link to="/register" className="auth-link">
+            Need an account? Register
+          </Link>
         </div>
       </div>
     </div>

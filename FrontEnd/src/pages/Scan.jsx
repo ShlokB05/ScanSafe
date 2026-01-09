@@ -1,11 +1,9 @@
+// src/pages/Scan.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import AppHeader from "../components/AppHeader.jsx";
-
-import { API } from "../lib/api.js"; // adjust path if needed
-
-
+import { apiUrl, ensureCsrf, getCookie } from "../lib/api.js";
 
 function BarcodeOverlay() {
   return (
@@ -22,14 +20,6 @@ function BarcodeOverlay() {
   );
 }
 
-function getCookie(name) {
-  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-async function ensureCsrf() {
-  await fetch(`${API}/auth/csrf/`, { credentials: "include" });
-}
 async function postForm(url, form) {
   await ensureCsrf();
   const csrftoken = getCookie("csrftoken");
@@ -39,7 +29,7 @@ async function postForm(url, form) {
     method: "POST",
     credentials: "include",
     headers: { "X-CSRFToken": csrftoken },
-    body: form,
+    body: form
   });
 
   const data = await res.json().catch(() => ({}));
@@ -51,15 +41,15 @@ async function lookupByGtin(gtin) {
   const form = new FormData();
   form.append("mode", "gtin");
   form.append("gtin", gtin);
-  return postForm("/api/scan/", form);
+  return postForm(apiUrl("/scan/"), form);
 }
 
 async function uploadIngredients(file, gtin) {
   const form = new FormData();
   form.append("mode", "ingredients");
-  if (gtin) form.append("gtin", gtin); // allow upload even if gtin is missing
+  if (gtin) form.append("gtin", gtin);
   form.append("image", file);
-  return postForm("/api/scan/", form);
+  return postForm(apiUrl("/scan/"), form);
 }
 
 function uniq(arr) {
@@ -74,8 +64,6 @@ function normalizeUnknown(u) {
 export default function Scan() {
   const videoRef = useRef(null);
   const controlsRef = useRef(null);
-
-  // prevents backend spam once we got a scan + result
   const lockedRef = useRef(false);
 
   const [err, setErr] = useState("");
@@ -102,7 +90,7 @@ export default function Scan() {
         BarcodeFormat.UPC_A,
         BarcodeFormat.EAN_8,
         BarcodeFormat.UPC_E,
-        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_128
       ]);
       hints.set(DecodeHintType.TRY_HARDER, true);
 
@@ -112,26 +100,27 @@ export default function Scan() {
         video: {
           facingMode: { ideal: "environment" },
           width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
+          height: { ideal: 720 }
+        }
       };
 
       const controls = await reader.decodeFromConstraints(
         constraints,
         videoRef.current,
         async (scanResult, scanErr) => {
-          // ignore normal “no code found yet” frames
           if (scanErr && scanErr?.name === "NotFoundException") return;
           if (scanErr) {
             const msg = scanErr?.message || "";
-            if (scanErr?.name === "NotFoundException" || msg.includes("No MultiFormat Readers")) return;
+            if (
+              scanErr?.name === "NotFoundException" ||
+              msg.includes("No MultiFormat Readers")
+            )
+              return;
             setErr(msg);
             return;
           }
 
           if (!scanResult) return;
-
-          // ✅ only fire ONE backend lookup until user hits Rescan
           if (lockedRef.current) return;
 
           const gtin = scanResult.getText();
@@ -153,7 +142,7 @@ export default function Scan() {
             }
           } catch (e) {
             setErr(e?.message || "Lookup failed");
-            lockedRef.current = false; // allow retry if lookup failed
+            lockedRef.current = false;
           } finally {
             setLoading(false);
           }
@@ -169,7 +158,6 @@ export default function Scan() {
   useEffect(() => {
     startScanner();
     return () => stopScanner();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const verified = uniq((result?.matches || []).map((m) => m?.[0]));
@@ -180,14 +168,11 @@ export default function Scan() {
     <div className="app">
       <AppHeader />
       <main className="scan-page">
-        {/* LEFT / TOP UI */}
         <div style={{ padding: 12 }}>
           {loading ? <div>Scanning…</div> : null}
           {err ? <div style={{ paddingTop: 8 }}>{err}</div> : null}
 
           <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
-           
-
             <button
               type="button"
               onClick={() => {
@@ -196,19 +181,19 @@ export default function Scan() {
                 setResult(null);
                 setShowPopup(false);
                 setPendingGtin(null);
-                lockedRef.current = false; // ✅ allow a fresh backend call
+                lockedRef.current = false;
               }}
             >
               Rescan
             </button>
           </div>
 
-          {/* ✅ CLEAN RESULTS UI (NO JSON) */}
           {result ? (
             <div style={{ marginTop: 12 }}>
               <div style={{ fontSize: 12, opacity: 0.8 }}>
                 GTIN: <b>{result.gtin || pendingGtin || "—"}</b> • Source:{" "}
-                <b>{result.gtin_source || "—"}</b> • Cache: <b>{result.cache || "—"}</b>
+                <b>{result.gtin_source || "—"}</b> • Cache:{" "}
+                <b>{result.cache || "—"}</b>
               </div>
 
               <div style={{ marginTop: 12 }}>
@@ -252,7 +237,6 @@ export default function Scan() {
             </div>
           ) : null}
 
-          {/* ✅ POPUP */}
           {showPopup ? (
             <div
               style={{
@@ -260,7 +244,7 @@ export default function Scan() {
                 padding: 12,
                 border: "1px solid #ccc",
                 borderRadius: 8,
-                background: "white",
+                background: "white"
               }}
             >
               <div style={{ marginBottom: 8 }}>
@@ -303,7 +287,6 @@ export default function Scan() {
           ) : null}
         </div>
 
-        {/* CAMERA (KEEP OVERLAY) */}
         <div className="camera">
           <video ref={videoRef} className="video" playsInline muted />
           <BarcodeOverlay />
