@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 # Set work directory
 WORKDIR /
 
-COPY app/requirements.txt .
+COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r api/requirements.txt
 
 COPY . .
