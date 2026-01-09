@@ -30,7 +30,7 @@ export default function Register() {
         </Link>
 
         <h1 className="auth-title">Register</h1>
-        <p className="auth-subtitle">Set up your account in 30 seconds.</p>
+        <p className="auth-subtitle">Set up your account in 30 seconds. By registering you agree that this project is just for testing and not meant to be a genuine allergy checker due to limits of Ocr. </p>
 
         {err ? <div className="alert">{err}</div> : null}
 
