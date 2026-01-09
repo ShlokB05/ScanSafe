@@ -18,6 +18,7 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth import login
 from rest_framework import status
 from django.utils.decorators import method_decorator
+from django.db import IntegrityError
 import tempfile
 
 
@@ -32,15 +33,23 @@ class CsrfView(APIView):
         return Response({"csrfToken": get_token(request)})
     
 class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()                     
-    permission_classes = [permissions.AllowAny]        
+    queryset = User.objects.all()
+    permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
 
-        login(request, user)  
+        try:
+            user = serializer.save()
+        except IntegrityError:
+            return Response(
+                {"error": "Account already exists. Try logging in."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        login(request, user)
         return Response(
             {"user": {"email": user.email, "name": user.first_name}},
             status=status.HTTP_201_CREATED
@@ -55,8 +64,7 @@ class LoginView(APIView):
 
         user = authenticate(request, username=email, password=password)
         if not user:
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
         login(request, user)
         return Response({"user": {"email": user.email, "name": user.first_name}})
     
