@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY . /
 
-CMD ["sh", "-c", "gunicorn ScanSafe.ScanSafe.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 1 --timeout 180"]
+CMD ["sh", "-c", "gunicorn ScanSafe.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 1 --timeout 180"]
