@@ -8,6 +8,8 @@ import Register from "./pages/Register.jsx";
 import Settings from "./pages/Settings.jsx";
 import Allergens from "./pages/Allergens.jsx";
 import Scan from "./pages/Scan.jsx";
+import { API } from "./lib/api.js"; 
+
 
 function RequireAuth({ children }) {
   const [state, setState] = useState({ loading: true, authed: false });
@@ -15,7 +17,7 @@ function RequireAuth({ children }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/auth/me/", { credentials: "include" });
+        const res = await fetch(`${API}/auth/me/`, { credentials: "include" });
         const data = await res.json();
         setState({ loading: false, authed: !!data.user });
       } catch {

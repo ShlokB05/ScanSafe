@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import AppHeader from "../components/AppHeader.jsx";
+import { API } from "../lib/api.js"; 
+
 
 function getCookie(name) {
   const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
@@ -7,13 +9,14 @@ function getCookie(name) {
 }
 
 async function ensureCsrf() {
-  await fetch("/api/auth/csrf/", { credentials: "include" });
+  await fetch(`${API}/auth/csrf/`, { credentials: "include" });
 }
+
 
 async function saveAllergensRemote(list) {
   await ensureCsrf();
   const csrftoken = getCookie("csrftoken");
-  const res = await fetch("/api/profile/", {
+  const res = await fetch(`${API}/profile/`, {
     method: "PATCH",
     credentials: "include",
     headers: {

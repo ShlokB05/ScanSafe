@@ -3,6 +3,10 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import AppHeader from "../components/AppHeader.jsx";
 
+import { API } from "../lib/api.js"; // adjust path if needed
+
+
+
 function BarcodeOverlay() {
   return (
     <div className="overlay">
@@ -24,9 +28,8 @@ function getCookie(name) {
 }
 
 async function ensureCsrf() {
-  await fetch("/api/auth/csrf/", { credentials: "include" });
+  await fetch(`${API}/auth/csrf/`, { credentials: "include" });
 }
-
 async function postForm(url, form) {
   await ensureCsrf();
   const csrftoken = getCookie("csrftoken");
