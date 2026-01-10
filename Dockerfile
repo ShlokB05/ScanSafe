@@ -1,32 +1,38 @@
-# ---------- Frontend build ----------
+# ---------- build frontend ----------
 FROM node:20-alpine AS frontend
-WORKDIR /app
+WORKDIR /frontend
 
-COPY package*.json ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+# IMPORTANT: your package.json is in FrontEnd/
+COPY FrontEnd/package*.json ./
+RUN npm ci
 
-COPY . .
+COPY FrontEnd/ ./
 RUN npm run build
 
 
-# ---------- Backend runtime ----------
-FROM python:3.12-slim
-ENV PYTHONUNBUFFERED=1
+# ---------- backend ----------
+FROM python:3.12-slim AS backend
 WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 COPY api/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-COPY . .
+# copy backend source
+COPY . /app
 
-# Copy built frontend into places Django expects
-COPY --from=frontend /app/dist /app/dist
-RUN mkdir -p /app/templates /app/static \
- && cp -r /app/dist/* /app/static/ \
- && mv /app/static/index.html /app/templates/index.html
+# copy built frontend into Django template + static source dirs
+RUN mkdir -p /app/templates /app/static
+COPY --from=frontend /frontend/dist/index.html /app/templates/index.html
+COPY --from=frontend /frontend/dist/assets /app/static/assets
 
-# Run DB + static at container start (NOT at build time)
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# (optional) if dist has other root files like vite.svg
+# COPY --from=frontend /frontend/dist/vite.svg /app/static/vite.svg
 
-CMD ["/entrypoint.sh"]
+# collect static (writes into STATIC_ROOT)
+RUN python manage.py collectstatic --noinput
+
+# run migrations at container start (NOT at build time)
+CMD sh -c "python manage.py migrate --noinput && gunicorn ScanSafe.wsgi:application --bind 0.0.0.0:${PORT:-8080} --timeout 300 --workers 2"
