@@ -3,6 +3,10 @@
     {
       "source": "/api/(.*)",
       "destination": "https://scansafe-312586010242.europe-west1.run.app/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
