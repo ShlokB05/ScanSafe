@@ -1,68 +1,85 @@
-const API_ORIGIN = import.meta.env.VITE_API_URL || "http://localhost:8000";
-const API = `${API_ORIGIN}/api`;
+// src/lib/auth.js
+import { apiUrl, ensureCsrf, getCookie } from "./api.js";
 
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(";").shift();
-  return null;
-}
-
-async function ensureCsrf() {
-  await fetch(`${API}/auth/csrf/`, { credentials: "include" });
-  return getCookie("csrftoken") || "";
+async function readJson(res) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      data?.detail ||
+      data?.error ||
+      data?.message ||
+      `Request failed (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
 }
 
 export async function getUser() {
-  const res = await fetch(`${API}/auth/me/`, { credentials: "include" });
-  const data = await res.json().catch(() => ({}));
-  return data.user ?? null;
+  const res = await fetch(apiUrl("/auth/me/"), { credentials: "include" });
+  const data = await readJson(res);
+  return data?.user || null;
 }
 
 export async function login({ email, password }) {
-  const csrf = await ensureCsrf();
-  const res = await fetch(`${API}/auth/login/`, {
+  await ensureCsrf();
+  const csrftoken = getCookie("csrftoken");
+
+  const res = await fetch(apiUrl("/auth/login/"), {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
     credentials: "include",
-    body: JSON.stringify({ email, password }),
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrftoken || ""
+    },
+    body: JSON.stringify({ email, password })
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || "Could not login");
-  return data.user ?? null;
+
+  return readJson(res);
 }
 
 export async function register({ name, email, password }) {
-  const csrf = await ensureCsrf();
-  const res = await fetch(`${API}/auth/register/`, {
+  await ensureCsrf();
+  const csrftoken = getCookie("csrftoken");
+
+  const res = await fetch(apiUrl("/auth/register/"), {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
     credentials: "include",
-    body: JSON.stringify({ name, email, password }),
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrftoken || ""
+    },
+    body: JSON.stringify({ name, email, password })
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || "Could not register");
-  return data.user ?? null;
+
+  return readJson(res);
 }
 
-export async function updateUser(patch) {
-  const csrf = await ensureCsrf();
-  const res = await fetch(`${API}/profile/`, {
+export async function updateUser(payload) {
+  await ensureCsrf();
+  const csrftoken = getCookie("csrftoken");
+
+  const res = await fetch(apiUrl("/auth/profile/"), {
     method: "PATCH",
-    headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
     credentials: "include",
-    body: JSON.stringify(patch),
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrftoken || ""
+    },
+    body: JSON.stringify(payload)
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || "Could not update user");
-  return data ?? null;
+
+  return readJson(res);
 }
 
 export async function logout() {
-  const csrf = await ensureCsrf();
-  await fetch(`${API}/auth/logout/`, {
+  await ensureCsrf();
+  const csrftoken = getCookie("csrftoken");
+
+  const res = await fetch(apiUrl("/auth/logout/"), {
     method: "POST",
-    headers: { "X-CSRFToken": csrf },
     credentials: "include",
+    headers: { "X-CSRFToken": csrftoken || "" }
   });
+
+  return readJson(res);
 }

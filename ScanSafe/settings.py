@@ -73,9 +73,18 @@ DATABASES = {
     "default": dj_database_url.parse(os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3"), conn_max_age=600)
 }
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+FRONTEND_DIST = BASE_DIR / "frontend_dist"
+
+TEMPLATES[0]["DIRS"] = [FRONTEND_DIST]
+
+STATICFILES_DIRS = [
+    FRONTEND_DIST / "assets",
+]
+
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -94,9 +103,11 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SESSION_COOKIE_SAMESITE = "None"
-    CSRF_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_COOKIE_SAMESITE = "Lax"
     SECURE_SSL_REDIRECT = True
+
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
