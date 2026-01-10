@@ -75,15 +75,13 @@ DATABASES = {
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
-FRONTEND_DIST = BASE_DIR / "frontend_dist"
+TEMPLATES[0]["DIRS"] = [BASE_DIR / "templates"]
 
-TEMPLATES[0]["DIRS"] = [FRONTEND_DIST]
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
-STATICFILES_DIRS = [
-    FRONTEND_DIST / "assets",
-]
+
 
 
 MEDIA_URL = "/media/"
